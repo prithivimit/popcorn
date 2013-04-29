@@ -1,0 +1,47 @@
+	<users>
+		<user id="1">
+			<name>john</name>
+			<friends>
+        <friend>2</friend>
+        <friend>3</friend>
+      </friends>
+      <reviews>
+        <review>
+          <text>john review 1</text>
+        </review>
+        <review>
+          <text>john review 2</text>
+      </review>
+      </reviews>
+		</user>
+
+    <user id="2">
+			<name>mike</name>
+			<friends>
+        <friend>1</friend>
+      </friends>
+      <reviews>
+        <review>
+          <text>mike review 1</text>
+      </review>
+        <review>
+          <text>mike review 2</text>
+      </review>
+      </reviews>
+		</user>
+
+    <user id="3">
+			<name>carl</name>
+			<friends>
+        <friend>1</friend>
+      </friends>
+      <reviews>
+        <review>
+          <text>carl review 1</text>
+      </review>
+        <review>
+          <text>carl review 2</text>
+      </review>
+      </reviews>
+		</user>
+	</users>

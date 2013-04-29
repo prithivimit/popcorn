@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Popcorn</title>
+    <link href="homepage-en_US.css" rel="stylesheet" />
+    <link href="www-pkg-en_US.css" rel="stylesheet" />
+    <script src="jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            //Fetch the xml data
+            $.ajax({
+                url: "users/userlist.txt",
+                success: function (data) {
+                    $xml = $(data);
+                },
+                async: false,
+                dataType: "xml"
+            });
+            $("#logo_big").width($(window).width() * 0.29);
+            var i = 0;
+            //Add the users to the drop down list
+            $user = $xml.find("user");
+            $user.each(function () {
+                if ($(this).find("name").text() == "No Name") return;
+                if (i != 10)
+                    $("#users").append("<option value=" + $(this).attr("id") + ">" + $(this).find("name").text() + "</option>");
+                else
+                    $("#users").append("<option value=" + $(this).attr("id") + " selected='selected'>" + $(this).find("name").text() + "</option>");
+                i++;                
+                if (i == 500) return false;
+            });
+        });
+    </script>
+</head>
+<body>
+    <div style="padding-left:25%;padding-top:5%;">
+        <h1 style="text-align:center;background: url(yelp.png) no-repeat;height:100px;background-size:70%"></h1>
+         <div>
+             <table>
+                 <tr>
+                     <td>
+                         <img id="logo_big" src="logo_big.png" height="400"/>
+                     </td>
+                     <td>
+                          <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+                             <div  style="border:2px solid #ccc; border-radius:5px; width:290px; ">
+                                <form method="get" action="home.html" style="padding:4px 4px 4px 4px;">
+                                  <span style="font-size:large; padding-left:20px;"><b>Username:</b></span>
+                                      <select style="font-size:large" id="users" name="user">
+                                      </select>
+                                      <br />
+                                      <br />
+                                      <div class="button-container"  style="padding-left:180px;">
+				                        <button id="header-search-submit" type="submit" value="submit" class="ybtn ybtn-primary ybtn-large"><span>Enter</span></button>			        </div>
+                                </form>
+                                 </div>
+                     </td>
+                 </tr>
+                 </table>
+        </div>
+    </div>
+</body>
+</html>

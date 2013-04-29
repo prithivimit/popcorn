@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Popcorn</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 98%;
+      }
+    </style>
+    <script src="jquery.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script type="text/javascript">
+    function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+        var regexS = "[\\?&]" + name + "=([^&#]*)";
+        var regex = new RegExp(regexS);
+        var results = regex.exec(window.location.search);
+        if (results == null)
+            return "";
+        else
+            return decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+    google.maps.Map.prototype.markers = new Array();
+
+    google.maps.Map.prototype.getMarkers = function () {
+        return this.markers
+    };
+
+    google.maps.Map.prototype.clearMarkers = function () {
+        for (var i = 0; i < this.markers.length; i++) {
+            this.markers[i].setMap(null);
+        }
+        this.markers = new Array();
+    };
+
+    google.maps.Marker.prototype._setMap = google.maps.Marker.prototype.setMap;
+
+    google.maps.Marker.prototype.setMap = function (map) {
+        if (map) {
+            map.markers[map.markers.length] = this;
+        }
+        this._setMap(map);
+    }
+      var map;
+      function initialize() {
+        var mapOptions = {
+          zoom: 14,
+          center: new google.maps.LatLng(33.4483333, -112.0733333),
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById('map-canvas'),
+            mapOptions);
+        loadMap();
+      }
+
+      google.maps.event.addDomListener(window, 'load', initialize);
+    
+      function loadMap() {
+          //$("#users").change(function () {
+          //Fetch the selected user's xml data
+          $.ajax({
+              url: "users/" + getParameterByName("user") + ".txt",
+              success: function (data) {
+                  $selectedUser = $(data);
+              },
+              async: false,
+              dataType: "xml"
+          });
+
+          //$("#userLink").attr("href", "user.html?user_id=" + getParameterByName("user"));
+          $("#username").text($selectedUser.find("name").text()+" !");
+          //display the reviews for the selected user
+          $reviews = $selectedUser.find("reviews");
+          $("#reviews").empty();
+          map.clearMarkers();
+          var color = 0;
+          $reviews.find("review").each(function () {
+              var div;
+              if (color % 2 == 0)
+                  div = $("<div style='background-color:#E6E7F2;padding:4px 4px 4px 4px;'></div>");
+              else
+                  div = $("<div></div>");
+              color++;
+
+              div.append("<span><b>Restaurant</b>: " + $(this).find("business_name").text() + " stars</span><br>");
+              div.append("<span><b>Rating</b>: " + $(this).find("rating").text() + " stars</span><br>");
+              var anchor = $("<a href='javascript:void(0);'>Show Review</a>");
+              $(anchor).click(function () {
+                  if ($(this).html()=="Hide Review") {
+                      $(this).html("Show Review");
+                  }
+                  else {
+                      $(this).html("Hide Review");
+                  }
+                  $(this).next().next().toggle();
+              });
+              var span = $("<span>" + $(this).find("text").text() + "</span>");
+              span.hide();
+              div.append(anchor);
+              div.append("<br/>");
+              div.append(span);
+              $("#reviews").append(div);
+          });
+
+          //display the friend markers
+          $friends = $selectedUser.find("friends");
+          var j = 0;
+          $friends.find("friend").each(function () {
+              j++;
+              if (j == 20) return false;
+              var error = false;
+              //Fetch the selected user's xml data
+              $.ajax({
+                  url: "users/" + $(this).text() + ".txt",
+                  success: function (data) {
+                      $friend = $(data);
+                  },
+                  async: false,
+                  dataType: "xml",
+                  fail: function (data) {
+                      return;
+                  }
+              });
+              if (typeof $friend == 'undefined' || $friend.length == 0) return;
+              $friendReviews = $friend.find("reviews");
+              var k = 0;
+              $friendReviews.find("review").each(function () {
+                  k++;
+                  var marker = new google.maps.Marker({
+                      position: new google.maps.LatLng($(this).find("lat").text(), $(this).find("long").text()),
+                      map: map,
+                      title: $friend.find("name").text() + ", " + $(this).find("business_name").text(),
+                      id: $friend.find("user").attr("id")
+                  });
+                  if (k == 1) {
+                      var center = new google.maps.LatLng($(this).find("lat").text(), $(this).find("long").text());
+                      map.panTo(center);
+                  }
+                  // Listen for click event  
+                  google.maps.event.addListener(marker, 'click', function () {
+                      window.open("user.html?user_id=" + $(this).attr("id"));
+                  });
+                  return false;
+              });
+          });
+          //});
+      }
+    </script>
+  </head>
+  <body style="padding:20px 20px 20px 20px;overflow:hidden;">
+      <div style="padding-left:25%;">
+        <h1 style="text-align:center;background: url(yelp.png) no-repeat;height:100px;background-size:70%"></h1>
+      </div>
+      <span style="font-size:large">Welcome <b id="username"></b></span>
+         <!-- <select style="font-size:large" id="users">
+          </select>-->
+      <br /><br />
+      <div id="categories"></div>
+            <span style="font-size:large">
+                <b>Your Reviews</b>
+            </span>
+            <span style="font-size:large;float:right;">
+                <b>People with similar tastes!</b>
+            </span>
+      <br />
+      <div id="reviews" style="overflow-y:scroll;height:70%;width:40%;float:left;"></div>
+      <div id="map-canvas" style="height:70%;width:60%;float:right;"></div>
+  </body>
+</html>

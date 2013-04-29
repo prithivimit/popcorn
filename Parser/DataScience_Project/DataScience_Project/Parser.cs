@@ -15,23 +15,32 @@ namespace DataScience_Project
             //Parse the businesses
             Dictionary<string, Business> businesses = new Dictionary<string, Business>();
             StreamReader reader = new StreamReader(@"F:\Data Science Project\businesses.txt");
+            HashSet<string> set = new HashSet<string>();
             string line = reader.ReadLine();
             while (line != null)
             {
                 if (line.Contains("\"type\": \"business\""))
                 {
                     JObject obj = JObject.Parse(line);
-                    Business business = new Business();
-                    business.name = obj["name"].ToString();
-                    business.full_address = obj["full_address"].ToString();
-                    business.city = obj["city"].ToString();
-                    business.state = obj["state"].ToString();
-                    business.latitude = double.Parse(obj["latitude"].ToString());
-                    business.longitude = double.Parse(obj["longitude"].ToString());
-                    business.stars = float.Parse(obj["stars"].ToString());
-                    business.review_count = int.Parse(obj["review_count"].ToString());
-                    business.categories = obj["categories"].ToString();
-                    businesses.Add(obj["business_id"].ToString(), business);
+                    if (obj["categories"].ToString().Contains("Restaurants"))
+                    {
+                        JArray array = JArray.Parse(obj["categories"].ToString());
+                        foreach (JValue val in array)
+                        {
+                            set.Add(val.ToString());
+                        }
+                        Business business = new Business();
+                        business.name = obj["name"].ToString();
+                        business.full_address = obj["full_address"].ToString();
+                        business.city = obj["city"].ToString();
+                        business.state = obj["state"].ToString();
+                        business.latitude = double.Parse(obj["latitude"].ToString());
+                        business.longitude = double.Parse(obj["longitude"].ToString());
+                        business.stars = float.Parse(obj["stars"].ToString());
+                        business.review_count = int.Parse(obj["review_count"].ToString());
+                        business.categories = obj["categories"].ToString();
+                        businesses.Add(obj["business_id"].ToString(), business);
+                    }
                 }
                 line = reader.ReadLine();
             }
@@ -40,12 +49,13 @@ namespace DataScience_Project
             reader = new StreamReader(@"F:\Data Science Project\reviews.txt");
             Dictionary<string, User> users = new Dictionary<string, User>();
             line = reader.ReadLine();
+            int i = 0;
             while (line != null)
             {
                 if (line.Contains("\"type\": \"review\""))
                 {
                     JObject obj = JObject.Parse(line);
-                    if (businesses[obj["business_id"].ToString()].categories.Contains("Restaurants"))
+                    if (businesses.ContainsKey(obj["business_id"].ToString()) && businesses[obj["business_id"].ToString()].categories.Contains("Restaurants"))
                     {
                         if (users.ContainsKey(obj["user_id"].ToString()))
                         {
@@ -65,46 +75,54 @@ namespace DataScience_Project
                             user.reviews.Add(review);
                             users.Add(obj["user_id"].ToString(), user);
                         }
-                        //Console.WriteLine(line);
+                        
+                        //if (businesses[obj["business_id"].ToString()].categories.Contains("Bagels") && obj["business_id"].ToString()=="3vKhV2ELR2hmwlnoNqYWaA")
+                        {
+                            //Console.WriteLine(obj["user_id"].ToString() + ",\"" + RemoveSpecialCharacters(obj["text"].ToString()) + "\"");
+                            Console.WriteLine("{\"id1\":\"" + ++i + "\"," + "\"id\":\"" + obj["review_id"].ToString() + "\",\"text\":\"" + RemoveSpecialCharacters(obj["text"].ToString()) + "\"}");
+                        }
                     }
                 }
                 line = reader.ReadLine();
             }
 
-            //Parse the users
-            reader = new StreamReader(@"F:\Data Science Project\users.txt");
-            line = reader.ReadLine();
-            while (line != null)
-            {
-                if (line.Contains("\"type\": \"user\""))
-                {
-                    JObject obj = JObject.Parse(line);
-                    if (users.ContainsKey(obj["user_id"].ToString()))
-                    {
-                        users[obj["user_id"].ToString()].name = obj["name"].ToString();
-                        users[obj["user_id"].ToString()].average_stars = float.Parse(obj["average_stars"].ToString());
-                        users[obj["user_id"].ToString()].review_count = int.Parse(obj["review_count"].ToString());
-                        users[obj["user_id"].ToString()].funny_votes = int.Parse(obj["votes"]["funny"].ToString());
-                        users[obj["user_id"].ToString()].useful_votes = int.Parse(obj["votes"]["useful"].ToString());
-                        users[obj["user_id"].ToString()].cool_votes = int.Parse(obj["votes"]["cool"].ToString());
-                    }
-                }
-                line = reader.ReadLine();
-            }
+            ////Parse the users
+            //reader = new StreamReader(@"F:\Data Science Project\users.txt");
+            //line = reader.ReadLine();
+            //while (line != null)
+            //{
+            //    if (line.Contains("\"type\": \"user\""))
+            //    {
+            //        JObject obj = JObject.Parse(line);
+            //        if (users.ContainsKey(obj["user_id"].ToString()))
+            //        {
+            //            users[obj["user_id"].ToString()].name = obj["name"].ToString();
+            //            users[obj["user_id"].ToString()].average_stars = float.Parse(obj["average_stars"].ToString());
+            //            users[obj["user_id"].ToString()].review_count = int.Parse(obj["review_count"].ToString());
+            //            users[obj["user_id"].ToString()].funny_votes = int.Parse(obj["votes"]["funny"].ToString());
+            //            users[obj["user_id"].ToString()].useful_votes = int.Parse(obj["votes"]["useful"].ToString());
+            //            users[obj["user_id"].ToString()].cool_votes = int.Parse(obj["votes"]["cool"].ToString());
+            //        }
+            //    }
+            //    line = reader.ReadLine();
+            //}
 
-            foreach (User user in users.Values)
+            /*
+            foreach (KeyValuePair<string,User> user in users)
             {
-                if (user.reviews.Count > 0)
+                if (user.Value.reviews.Count > 0)
                 {
+                    Console.Write(user.Key+",");
                     Console.Write("\"");
-                    foreach (Review review in user.reviews)
+                    foreach (Review review in user.Value.reviews)
                     {
-                        Console.Write(review.text + " ");
+                        Console.Write(review.text);
                     }
                     Console.Write("\"");
                     Console.WriteLine();
                 }
             }
+            */
 
             //User target = users["FevBcg69uao1b4CSW-PKBw"];
         }
@@ -129,6 +147,7 @@ namespace DataScience_Project
         public User()
         {
             reviews = new List<Review>();
+            friends = new HashSet<string>();
         }
         public List<Review> reviews { get; set; }
         public int funny_votes { get; set; }
@@ -137,6 +156,8 @@ namespace DataScience_Project
         public string name { get; set; }
         public float average_stars { get; set; }
         public int review_count { get; set; }
+        public string user_id { get; set; }
+        public HashSet<string> friends { get; set; }
     }
 
     class Review
@@ -144,10 +165,15 @@ namespace DataScience_Project
         public string text { get; set; }
         public string business_id { get; set; }
         public float stars { get; set; }
+        public string user_id { get; set; }
     }
 
     class Business
     {
+        public Business()
+        {
+            reviews = new List<Review>();
+        }
         public string name { get; set; }
         public string full_address { get; set; }
         public string city { get; set; }
@@ -157,5 +183,6 @@ namespace DataScience_Project
         public float stars { get; set; }
         public int review_count { get; set; }
         public string categories { get; set; }
+        public List<Review> reviews { get; set; }
     }
 }

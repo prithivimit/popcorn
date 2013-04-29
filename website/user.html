@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Popcorn</title>
+    <script src="jquery.min.js"></script>
+    <script type="text/javascript">
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+            var regexS = "[\\?&]" + name + "=([^&#]*)";
+            var regex = new RegExp(regexS);
+            var results = regex.exec(window.location.search);
+            if (results == null)
+                return "";
+            else
+                return decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        $(document).ready(function () {
+            //Fetch the selected user's xml data
+            $.ajax({
+                url: "users/" + getParameterByName("user_id") + ".txt",
+                success: function (data) {
+                    $selectedUser = $(data);
+                },
+                async: false,
+                dataType: "xml"
+            });
+
+            $("#username").text($selectedUser.find("name").text() + " !");
+
+            //display the reviews for the selected user
+            $reviews = $selectedUser.find("reviews");
+            $("#reviews").empty();
+            var color = 0;
+            $reviews.find("review").each(function () {
+                var div;
+                if (color % 2 == 0)
+                    div = $("<div style='background-color:#E6E7F2;padding:4px 4px 4px 4px;'></div>");
+                else
+                    div = $("<div></div>");
+                color++;
+                div.append("<span><b>Restaurant</b>: " + $(this).find("business_name").text() + " stars</span><br>");
+                div.append("<span><b>Rating</b>: " + $(this).find("rating").text() + " stars</span><br>");
+                var anchor = $("<a href='javascript:void(0);'>Show Review</a>");
+                $(anchor).click(function () {
+                    if ($(this).html() == "Hide Review") {
+                        $(this).html("Show Review");
+                    }
+                    else {
+                        $(this).html("Hide Review");
+                    }
+                    $(this).next().next().toggle();
+                });
+                var span = $("<span>" + $(this).find("text").text() + "</span>");
+                span.hide();
+                div.append(anchor);
+                div.append("<br/>");
+                div.append(span);
+                $("#reviews").append(div);
+            });
+        });
+
+    </script>
+</head>
+<body>
+     <div style="padding-left:25%;">
+        <h1 style="text-align:center;background: url(yelp.png) no-repeat;height:100px;background-size:70%"></h1>
+      </div>
+    <span style="font-size:large;padding-left:25%;padding-right:22%;">Reviews from <b id="username"></b></span>
+    <div id="reviews" style="padding-left:25%;padding-right:22%;">
+
+    </div>
+</body>
+</html>
